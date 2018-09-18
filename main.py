@@ -3,7 +3,6 @@ import argparse
 import time
 import numpy as np
 import picamera
-import io
 
 class Detector(object):
     def __init__(
@@ -22,30 +21,17 @@ class Detector(object):
             cv.dnn.blobFromImage(
                 image,
                 size = (self.width, self.height),
-                swapRB = True,
+                swapRB = False,
                 crop=False
             )
         )
         return self.net.forward()
 
-
-def get_frame():
-    with picamera.PiCamera() as camera:
-        stream = io.BytesIO()
-        camera.resolution = (300, 300)
-        camera.start_preview()
-        time.sleep(2)
-        camera.capture(stream, format='jpeg')
-        # Construct a numpy array from the stream
-        data = np.fromstring(stream.getvalue(), dtype = np.uint8)
-        # "Decode" the image from the array, preserving colour
-        image = cv.imdecode(data, 1)
-        cv.imwrite("capture.jpeg", image)
-        # OpenCV returns an array with data in BGR order. If you want RGB instead
-        # use the following...
-        image = image[:, :, ::-1]
-
-        return image
+def get_frame(camera, width, height):
+    image = np.empty((width * height * 3,), dtype=np.uint8)
+    camera.capture(image, format='bgr', use_video_port=True)
+    image = image.reshape((width, height, 3))
+    return image
 
 def process_detections(detections):
     maxval = -1
@@ -59,20 +45,31 @@ def process_detections(detections):
     print("max value of all detections was {}".format(maxval))
     
 def main():
-    detector = Detector(300, 300)
+
+    # image capture metadata
+    fps = 1
+    frame_width = 300
+    frame_height = 300
+
+    # picamera setup
+    camera = picamera.PiCamera()
+    camera.resolution = (frame_width, frame_height)
+    camera.framerate = fps
+    camera.start_preview()
+    time.sleep(2)
+
+    # detector setup
+    detector = Detector(frame_width, frame_height)
 
     while True:
-        image = get_frame()
+        image = get_frame(camera, frame_width, frame_height)
         detections = detector.detect_all(image)
         num_cars = process_detections(detections)
         break
 
+    # cleanup
+    camera.close()
+
+
 if __name__ == "__main__":
         main()
-
-
-
-
-
-
-
