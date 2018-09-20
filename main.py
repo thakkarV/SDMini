@@ -44,9 +44,8 @@ def process_detections(detections, threshold, class_num):
         print("max value of all detections was {}".format(maxval))
     return count
 
-# TODO: import video from file for offline processing
-def load_video():
-    pass
+def load_video(path):
+    return cv.VideoCapture(path)
 
 def main():
     args = get_cmd_args()
@@ -61,7 +60,7 @@ def main():
     else:
         if (args.path is None):
             print("For offline video processing, a path to a video file must be specified.")
-        video = load_video()
+        video = load_video(args.path)
 
     # detector setup
     detector = Detector(args.width, args.height)
@@ -69,15 +68,30 @@ def main():
     # main detection loop
     try:
         while True:
-            image = camera.get_frame(args.width, args.height)
+            
+            # run ssd on capture from camera
+            if (args.type[0] == 'online'):
+                image = camera.get_frame(args.width, args.height)
+            
+            # run ssd on a frame from video
+            else:
+                if video.isOpened():
+                    ret, image = video.read()
+                    if not ret:
+                        print('Error reading video.')
+                        break
+                else:
+                    print('Reached end of video.')
+                    break
             detections = detector.detect_all(image)
             num_cars = process_detections(detections, args.threshold, args.classes)
             print("{}, {}".format(datetime.datetime.now(), num_cars))
     except KeyboardInterrupt:
+        video.release()
         camera.close()
-        print("Exiting")
     
     # cleanup
+    print("Exiting")
     camera.close()
 
 if __name__ == "__main__":
