@@ -35,7 +35,7 @@ def process_detections(detections, threshold, class_num):
     maxval = -1
     count = 0
     for i in range(1, detections.shape[2]):
-        if (detections[0, 0, i, 2]) >= threshold and ((int)detections[0, 0, i, 1]) == class_num:
+        if (detections[0, 0, i, 2]) >= threshold and (int(detections[0, 0, i, 1])) == class_num:
             count += 1
 
     if (__debug__):
