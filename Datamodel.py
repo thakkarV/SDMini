@@ -3,6 +3,7 @@ import time
 import numpy as np
 import picamera
 import datetime
+import pdb
 
 class Detector(object):
     def __init__(
@@ -30,9 +31,9 @@ class Detector(object):
 class Camera(object):
     def __init__(self, frame_width, frame_height, fps):
         self.camera = picamera.PiCamera()
-        self.resolution = (frame_width, frame_height)
-        self.framerate = fps
-        self.start_preview()
+        self.camera.resolution = (frame_width, frame_height)
+        self.camera.framerate = fps
+        self.camera.start_preview()
         time.sleep(2)
 
     def get_frame(self, width, height):

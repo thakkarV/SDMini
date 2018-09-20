@@ -8,28 +8,28 @@ from Datamodel import Camera, Detector
 
 def get_cmd_args():
     parser = argparse.ArgumentParser(description = 'Senior Design Mini Project for Car Frequency Monitoring')
-    parser.add_arguement('--type', type = str, nargs = 1, default = None,
+    parser.add_argument('--type', type = str, nargs = 1, default = None,
         help = '\'online\' for directly from camera and \'offline\' for processing from video.'
     )
-    parser.add_arguement('--path', type = str, nargs = '+',
+    parser.add_argument('--path', type = str, nargs = '+', default = None,
         help = 'Path to video file to be used for offline detection.'
     )
-    parser.add_arguement('--detection-threshold', type = float, nargs = 1, default = 0.3,
+    parser.add_argument('--threshold', type = float, nargs = 1, default = 0.3,
         help = 'Threshold for detection. Min = 0 and Max = 1.'
     )
-    parser.add_arguement('--width', type = int, nargs = '+', default = 304,
+    parser.add_argument('--width', type = int, nargs = '+', default = 304,
         help = 'Width of frame.'
     )
-    parser.add_arguement('--height', type = int, nargs = '+', default = 304,
+    parser.add_argument('--height', type = int, nargs = '+', default = 304,
         help = 'Height of frame.'
     )
-    parser.add_arguement('--classes', type = int, nargs = '+', default = 3,
+    parser.add_argument('--classes', type = int, nargs = '+', default = 3,
         help = 'Class to be detected from the COCO dataset'
     )
-    parser.add_arguement('--fps', type = int, nargs = '+', default = 1,
+    parser.add_argument('--fps', type = int, nargs = '+', default = 1,
         help = 'Frames per second to be captured by the camera.'
     )
-    return parser.parse_args
+    return parser.parse_args()
 
 def process_detections(detections, threshold, class_num):
     maxval = -1
@@ -51,12 +51,12 @@ def load_video():
 def main():
     args = get_cmd_args()
     # check for required arguments
-    if (args.type is not 'offline' or args.type is not 'online'):
+    if (args.type[0] != 'offline' and args.type[0] != 'online'):
         print("Invalid argument for option \'--type\'. Only offline and online are valid options")
         return
     
     # picamera setup
-    if (args.type == 'online'):
+    if (args.type[0] == 'online'):
         camera = Camera(args.width, args.height, args.fps)
     else:
         if (args.path is None):
@@ -69,7 +69,7 @@ def main():
     # main detection loop
     try:
         while True:
-            image = get_frame(camera, args.width, args.height)
+            image = camera.get_frame(args.width, args.height)
             detections = detector.detect_all(image)
             num_cars = process_detections(detections, args.threshold, args.classes)
             print("{}, {}".format(datetime.datetime.now(), num_cars))
