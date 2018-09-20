@@ -56,7 +56,7 @@ def main():
         return
     
     # picamera setup
-    if (args.type == 'online')
+    if (args.type == 'online'):
         camera = Camera(args.width, args.height, args.fps)
     else:
         if (args.path is None):
